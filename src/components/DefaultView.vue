@@ -1,4 +1,5 @@
 <template>
+  <div class="default-view-container">
     <div class="default-view">
       <div v-if="initialLoading" class="data-display">
         <div class="data-card skeleton" v-for="i in 4" :key="'skeleton-'+i">
@@ -7,25 +8,26 @@
         </div>
       </div>
       <div v-else-if="formattedData" class="data-display">
-      <div class="data-cards-container">
-        <div class="data-card" v-for="(value, key) in formattedData" :key="key">
-          <h2>{{ getTitle(key) }}</h2>
-          <p>{{ value }}{{ getUnit(key) }}</p>
+        <div class="data-cards-container">
+          <div class="data-card" v-for="(value, key) in formattedData" :key="key">
+            <h2>{{ getTitle(key) }}</h2>
+            <p>{{ key === 'timestamp' ? formatTime(value) : value }}{{ getUnit(key) }}</p>
+          </div>
+        </div>
+        <div class="status-buttons">
+          <div class="status-button-container">
+            <button :class="temperatureButtonClass">{{ temperatureAlertMessage }}</button>
+          </div>
+          <div class="status-button-container">
+            <button :class="breathButtonClass">{{ breathAlertMessage }}</button>
+          </div>
+          <div class="status-button-container">
+            <p class="activity-status">{{ activityStatus }}</p>
+          </div>
         </div>
       </div>
-      <div class="status-buttons">
-        <div class="status-button-container">
-          <button :class="temperatureButtonClass">{{ temperatureAlertMessage }}</button>
-        </div>
-        <div class="status-button-container">
-          <button :class="breathButtonClass">{{ breathAlertMessage }}</button>
-        </div>
-        <div class="status-button-container">
-          <p class="activity-status">{{ activityStatus }}</p>
-        </div>
-      </div>
+      <p v-if="error" class="error-message">에러 발생: {{ error }}</p>
     </div>
-    <p v-if="error" class="error-message">에러 발생: {{ error }}</p>
   </div>
 </template>
 
@@ -40,7 +42,7 @@ export default {
   data() {
     return {
       initialLoading: true
-    }
+    };
   },
   watch: {
     loading(newValue) {
@@ -96,7 +98,8 @@ export default {
         activityLevel: '활동 수준',
         breathLevel: '호흡 수준',
         temperature: '온도',
-        lightLevel: '빛 수준'
+        lightLevel: '빛 수준',
+        timestamp: '시간' 
       };
       return titles[key] || key;
     },
@@ -106,44 +109,62 @@ export default {
         lightLevel: ' lux'
       };
       return units[key] || '';
+    },
+    formatTime(value) {
+      const date = new Date(value);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day} ${hours}시 ${minutes}분`;
     }
   }
 };
 </script>
 
+
 <style scoped>
+.default-view-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
 .default-view .data-display {
   width: 100%;
-  margin-bottom: 40px;
+  margin-bottom: 2.5rem;
 }
 
 .data-cards-container {
-  display: flex; /* 카드들을 가로로 나열 */
-  flex-wrap: nowrap; /* 카드들이 한 줄에 나열되도록 설정 */
-  overflow-x: auto; /* 카드들이 넘칠 때 스크롤 가능하게 설정 */
-  gap: 30px; /* 카드 간의 간격 설정 */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.875rem;
 }
 
 .data-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  flex: 0 0 auto; /* 카드가 크기에 맞게 고정 */
-  width: 250px; /* 카드의 고정 너비 설정 */
+  flex: 1 1 250px;
+  max-width: 250px;
 }
 
 .data-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
 }
 
 .data-card h2 {
   font-size: 1.3rem;
   color: #000000;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
   font-weight: 600;
 }
 
@@ -156,27 +177,27 @@ export default {
 
 .skeleton {
   background: #e0e0e0;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
 }
 
 .skeleton-title,
 .skeleton-value {
   background: #ccc;
-  height: 20px;
-  margin: 10px 0;
-  border-radius: 4px;
+  height: 1.25rem;
+  margin: 0.625rem 0;
+  border-radius: 0.25rem;
 }
 
 .status-buttons {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 1.25rem;
   width: 100%;
-  margin-top: 40px; /* 카드와 버튼 사이의 간격을 늘리기 위해 추가 */
+  margin-top: 2.5rem;
 }
 
 .status-button-container {
@@ -188,10 +209,10 @@ export default {
 
 .status-button {
   border: none;
-  padding: 14px 28px;
+  padding: 0.875rem 1.75rem;
   font-size: 1rem;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   transition: all 0.3s ease;
   color: #fff;
   font-weight: 600;
@@ -199,15 +220,15 @@ export default {
 }
 
 .status-button.alert {
-  background: #ff4d4d; /* Red for alert */
+  background: #ff4d4d;
 }
 
 .status-button.caution {
-  background: #ffcc00; /* Orange for caution */
+  background: #ffcc00;
 }
 
 .status-button.safe {
-  background: #4caf50; /* Green for safe */
+  background: #4caf50;
 }
 
 .status-button:hover {
@@ -224,9 +245,64 @@ export default {
   font-size: 1.2rem;
   text-align: center;
   background: #fdecea;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.375rem 0.75rem rgba(0, 0, 0, 0.1);
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .data-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .data-card h2 {
+    font-size: 1.1rem;
+  }
+
+  .data-card p {
+    font-size: 1.6rem;
+  }
+
+  .status-button {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .activity-status {
+    font-size: 1.3rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-cards-container {
+    gap: 1rem;
+  }
+
+  .status-buttons {
+    gap: 1rem;
+  }
+
+  .data-card h2 {
+    font-size: 1rem;
+  }
+
+  .data-card p {
+    font-size: 1.4rem;
+  }
+
+  .status-button {
+    font-size: 0.8rem;
+    padding: 0.625rem 1.25rem;
+  }
+
+  .activity-status {
+    font-size: 1.1rem;
+  }
 }
 </style>
